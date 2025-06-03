@@ -8,7 +8,6 @@ if platform == 'android':
     from jnius import autoclass
     import socket
 
-    request_permissions([Permission.INTERNET])
     WebView = autoclass('android.webkit.WebView')
     WebViewClient = autoclass('android.webkit.WebViewClient')
     LinearLayout = autoclass('android.widget.LinearLayout')
@@ -16,21 +15,31 @@ if platform == 'android':
 class WebViewApp(App):
     def build(self):
         if platform == 'android':
-            local_ip = socket.gethostbyname(socket.gethostname())
-            url = f'http://{local_ip}:5000'
-            webview = WebView(mActivity)
-            webview.getSettings().setJavaScriptEnabled(True)
-            webview.setWebViewClient(WebViewClient())
-            webview.loadUrl(url)
-            layout = LinearLayout(mActivity)
-            layout.setOrientation(1)
-            layout.addView(webview)
-            mActivity.setContentView(layout)
+            # تأجيل البناء لحين قبول الصلاحيات
+            request_permissions([Permission.INTERNET], self.permission_callback)
             return Widget()
         else:
             from kivy.uix.label import Label
             return Label(text="يُشغل فقط على Android")
 
+    def permission_callback(self, permissions, grants):
+        # تحقق من منح الصلاحية
+        if all(grants):
+            self.load_webview()
+
+    def load_webview(self):
+        local_ip = socket.gethostbyname(socket.gethostname())
+        url = f'http://{local_ip}:5000'
+
+        webview = WebView(mActivity)
+        webview.getSettings().setJavaScriptEnabled(True)
+        webview.setWebViewClient(WebViewClient())
+        webview.loadUrl(url)
+
+        layout = LinearLayout(mActivity)
+        layout.setOrientation(1)
+        layout.addView(webview)
+        mActivity.setContentView(layout)
+
 if __name__ == '__main__':
-    import main
     WebViewApp().run()
