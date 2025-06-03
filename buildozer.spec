@@ -15,6 +15,7 @@ fullscreen = 0
 
 # صلاحيات أندرويد
 android.permissions = INTERNET
+buildozer -v android debug
 
 # API والمكتبات
 android.api = 33
